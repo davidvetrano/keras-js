@@ -9,8 +9,5 @@ notebooks/**/.ipynb_checkpoints/
 # misc
 .DS_Store
 
-# babel compiled dir
-lib/
-
 # demos data
 demos/data/
