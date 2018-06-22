@@ -142,10 +142,7 @@ export default class Model {
       inputLayer.hasOutput = true
       inputLayer.visited = true
     })
-    const _layerCallPauses = this.layerCallPauses
-    this.layerCallPauses = false
-    await this._traverseDAG(this.inputLayerNames)
-    this.layerCallPauses = _layerCallPauses
+    this._traverseDAG(this.inputLayerNames)
 
     // reset hasOutput and visited flags in all layers
     this.finishedLayerNames = []
@@ -390,7 +387,7 @@ export default class Model {
    * @param {string[]} nodes - array of layer names
    * @returns {Promise}
    */
-  async _traverseDAG(nodes) {
+  _traverseDAG(nodes) {
     if (nodes.length === 0) {
       // Stopping criterion:
       // an output node will have 0 outbound nodes.
@@ -427,17 +424,11 @@ export default class Model {
         currentLayer.hasOutput = true
         currentLayer.visited = true
         this.finishedLayerNames.push(currentLayer.name)
-
-        if (this.layerCallPauses) {
-          // temporarily pause 0 ms
-          // useful for allowing DOM operations and other simultaneously running functions on the main thread
-          await Promise.delay(0)
-        }
       }
 
-      await this._traverseDAG(currentLayer.outbound)
+      this._traverseDAG(currentLayer.outbound)
     } else {
-      await Promise.all(nodes.map(node => this._traverseDAG([node])))
+      nodes.forEach(node => this._traverseDAG([node]));
     }
   }
 
@@ -482,7 +473,7 @@ export default class Model {
    * @returns {Promise} - outputData object where the keys are the named outputs of the model,
    * and values the TypedArray numeric data
    */
-  async predict(inputData) {
+  predict(inputData) {
     this.isRunning = true
 
     if (!_.isEqual(_.keys(inputData).sort(), this.inputLayerNames)) {
@@ -508,7 +499,7 @@ export default class Model {
     this.loadData(inputData)
 
     // start traversing DAG at inputs
-    await this._traverseDAG(this.inputLayerNames)
+    this._traverseDAG(this.inputLayerNames)
 
     // transfer intermediate outputs if specified
     this._maybeTransferIntermediateOutputs()
